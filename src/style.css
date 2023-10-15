@@ -62,11 +62,10 @@ button {
 }
 
 canvas {
-  height: 256px;
-  width: 256px;
+  
   border-radius: 30px;
-  border: 10px solid black;
-  filter: drop-shadow(0 0 0.75rem crimson);
+  border: 3px solid black;
+  filter: drop-shadow(0 0 0.75rem black);
 }
 
 button:hover {
