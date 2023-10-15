@@ -14,6 +14,11 @@
   -webkit-text-size-adjust: 100%;
 }
 
+div {
+  height: 600px;
+  width: 75%;
+}
+
 a {
   font-weight: 500;
   color: #646cff;
@@ -54,6 +59,14 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
+}
+
+canvas {
+  height: 256px;
+  width: 256px;
+  border-radius: 30px;
+  border: 10px solid black;
+  filter: drop-shadow(0 0 0.75rem crimson);
 }
 
 button:hover {
