@@ -92,13 +92,15 @@ function notify(name: Event) {
 
 function redraw() {
   ctx?.clearRect(0, 0, canvas.width, canvas.height);
+  const firstIndex = 0;
+  const secondIndex = 0;
   for (const line of paths) {
     if (line.length > 1) {
       ctx?.beginPath();
-      const cur = line[0];
-      ctx?.moveTo(cur[0], cur[1]);
+      const cur = line[firstIndex];
+      ctx?.moveTo(cur[firstIndex], cur[secondIndex]);
       for (const curcor of line) {
-        ctx?.lineTo(curcor[0], curcor[1]);
+        ctx?.lineTo(curcor[firstIndex], curcor[secondIndex]);
       }
       ctx?.stroke();
     }
