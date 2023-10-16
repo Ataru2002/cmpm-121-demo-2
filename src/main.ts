@@ -62,7 +62,7 @@ clrbt.addEventListener("click", () => {
 });
 
 undobt.addEventListener("click", () => {
-  if (!paths.length) {
+  if (paths.length) {
     insert = paths.pop();
     if (insert) {
       redos.push(insert);
@@ -72,7 +72,7 @@ undobt.addEventListener("click", () => {
 });
 
 redobt.addEventListener("click", () => {
-  if (!redos.length) {
+  if (redos.length) {
     insert = redos.pop();
     if (insert) {
       paths.push(insert);
@@ -96,9 +96,10 @@ function redraw() {
   const firstIndex = 0;
   const secondIndex = 1;
   const starter = 0;
+  const empty = 1;
   ctx?.clearRect(starter, starter, canvas.width, canvas.height);
   for (const line of paths) {
-    if (!line.length) {
+    if (line.length > empty) {
       ctx?.beginPath();
       const cur = line[firstIndex];
       ctx?.moveTo(cur[firstIndex], cur[secondIndex]);
