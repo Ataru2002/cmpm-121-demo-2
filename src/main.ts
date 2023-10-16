@@ -91,11 +91,12 @@ function notify(name: Event) {
 }
 
 function redraw() {
-  ctx?.clearRect(0, 0, canvas.width, canvas.height);
   const firstIndex = 0;
-  const secondIndex = 0;
+  const secondIndex = 1;
+  const starter = 0;
+  ctx?.clearRect(starter, starter, canvas.width, canvas.height);
   for (const line of paths) {
-    if (line.length > 1) {
+    if (!line.length) {
       ctx?.beginPath();
       const cur = line[firstIndex];
       ctx?.moveTo(cur[firstIndex], cur[secondIndex]);
