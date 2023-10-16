@@ -34,7 +34,8 @@ canvas.addEventListener("mousedown", (current) => {
   cursor.active = true;
   currentPath = [];
   paths.push(currentPath);
-  redos.splice(0, redos.length);
+  const startIndex = 0;
+  redos.splice(startIndex, redos.length);
   currentPath?.push([current.offsetX, current.offsetY]);
   notify(new Event("drawing-changed"));
 });
@@ -55,12 +56,13 @@ canvas.addEventListener("mouseup", () => {
 });
 
 clrbt.addEventListener("click", () => {
-  ctx?.clearRect(0, 0, canvas.width, canvas.height);
-  paths.splice(0, paths.length);
+  const startPos = 0;
+  ctx?.clearRect(startPos, startPos, canvas.width, canvas.height);
+  paths.splice(startPos, paths.length);
 });
 
 undobt.addEventListener("click", () => {
-  if (paths.length > 0) {
+  if (!paths.length) {
     insert = paths.pop();
     if (insert) {
       redos.push(insert);
@@ -70,7 +72,7 @@ undobt.addEventListener("click", () => {
 });
 
 redobt.addEventListener("click", () => {
-  if (redos.length > 0) {
+  if (!redos.length) {
     insert = redos.pop();
     if (insert) {
       paths.push(insert);
