@@ -48,7 +48,8 @@ canvas.addEventListener("mousemove", (current) => {
   cursorCmd = new Cursors(current.offsetX, current.offsetY);
   notify(new Event("cursor-changed"));
 
-  if (current.buttons == 1) {
+  const btrequire = 1;
+  if (current.buttons == btrequire) {
     currentLineCmd?.points.push([current.offsetX, current.offsetY]);
     notify(new Event("drawing-changed"));
   }
