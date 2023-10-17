@@ -13,11 +13,14 @@ const undobt = document.createElement("button");
 const redobt = document.createElement("button");
 
 const bus = new EventTarget();
-let currentPath: [number, number][] | null = null;
-const paths: [number, number][][] = [];
-const redos: [number, number][][] = [];
-let insert: [number, number][] | undefined;
+//let currentPath: [number, number][] | null = null;
+const paths: Lines[] = [];
+const redos: Lines[] = [];
+let insert: Lines | undefined;
+let currentLineCmd: Lines | null = null;
+let cursorCmd: Cursors | null = null;
 
+canvas.style.cursor = "none";
 clrbt.innerHTML = "clear";
 undobt.innerHTML = "undo";
 redobt.innerHTML = "redo";
@@ -26,32 +29,33 @@ canvas.height = 256;
 canvas.width = 256;
 const ctx = canvas.getContext("2d");
 
-const cursor = { active: false, x: 0, y: 0 };
+//const cursor = { active: false, x: 0, y: 0 };
 
 bus.addEventListener("drawing-changed", redraw);
+bus.addEventListener("cursor-changed", redraw);
 
 canvas.addEventListener("mousedown", (current) => {
-  cursor.active = true;
-  currentPath = [];
-  paths.push(currentPath);
+  //cursor.active = true;
+  currentLineCmd = new Lines(current.offsetX, current.offsetY);
+  paths.push(currentLineCmd);
   const startIndex = 0;
   redos.splice(startIndex, redos.length);
-  currentPath?.push([current.offsetX, current.offsetY]);
+  //currentPath?.push([current.offsetX, current.offsetY]);
   notify(new Event("drawing-changed"));
 });
 
 canvas.addEventListener("mousemove", (current) => {
-  if (cursor.active) {
-    cursor.x = current.offsetX;
-    cursor.y = current.offsetY;
-    currentPath?.push([current.offsetX, current.offsetY]);
+  cursorCmd = new Cursors(current.offsetX, current.offsetY);
+  notify(new Event("cursor-changed"));
+
+  if (current.buttons == 1) {
+    currentLineCmd?.points.push([current.offsetX, current.offsetY]);
     notify(new Event("drawing-changed"));
   }
 });
 
 canvas.addEventListener("mouseup", () => {
-  cursor.active = false;
-  currentPath = null;
+  currentLineCmd = null;
   notify(new Event("drawing-changed"));
 });
 
@@ -93,20 +97,47 @@ function notify(name: Event) {
 }
 
 function redraw() {
-  const firstIndex = 0;
-  const secondIndex = 1;
   const starter = 0;
-  const empty = 1;
   ctx?.clearRect(starter, starter, canvas.width, canvas.height);
-  for (const line of paths) {
-    if (line.length > empty) {
-      ctx?.beginPath();
-      const cur = line[firstIndex];
-      ctx?.moveTo(cur[firstIndex], cur[secondIndex]);
-      for (const curcor of line) {
-        ctx?.lineTo(curcor[firstIndex], curcor[secondIndex]);
-      }
-      ctx?.stroke();
+
+  paths.forEach((cmd) => cmd.execute());
+  if (cursorCmd) {
+    cursorCmd.execute();
+  }
+}
+
+class Lines {
+  points: [number, number][];
+  constructor(x: number, y: number) {
+    this.points = [[x, y]];
+  }
+  execute() {
+    const firstIndex = 0;
+    const secondIndex = 1;
+    ctx!.strokeStyle = "Black";
+    ctx?.beginPath();
+    const cur = this.points[firstIndex];
+    ctx?.moveTo(cur[firstIndex], cur[secondIndex]);
+    for (const curcor of this.points) {
+      ctx?.lineTo(curcor[firstIndex], curcor[secondIndex]);
     }
+    ctx?.stroke();
+  }
+  drag(x: number, y: number) {
+    this.points.push([x, y]);
+  }
+}
+
+class Cursors {
+  x: number;
+  y: number;
+  constructor(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+  }
+  execute() {
+    const fixerx = 8;
+    ctx!.font = "32px monospace";
+    ctx?.fillText(".", this.x - fixerx, this.y);
   }
 }
