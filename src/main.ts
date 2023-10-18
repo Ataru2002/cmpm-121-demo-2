@@ -11,6 +11,8 @@ const canvas = document.createElement("canvas");
 const clrbt = document.createElement("button");
 const undobt = document.createElement("button");
 const redobt = document.createElement("button");
+const thinbt = document.createElement("button");
+const thickbt = document.createElement("button");
 
 const bus = new EventTarget();
 //let currentPath: [number, number][] | null = null;
@@ -19,28 +21,28 @@ const redos: Lines[] = [];
 let insert: Lines | undefined;
 let currentLineCmd: Lines | null = null;
 let cursorCmd: Cursors | null = null;
+const defthick = 1;
+let thickness: number = defthick;
 
 canvas.style.cursor = "none";
 clrbt.innerHTML = "clear";
 undobt.innerHTML = "undo";
 redobt.innerHTML = "redo";
+thinbt.innerHTML = "thin";
+thickbt.innerHTML = "thick";
 canvas.id = "canvas";
 canvas.height = 256;
 canvas.width = 256;
 const ctx = canvas.getContext("2d");
 
-//const cursor = { active: false, x: 0, y: 0 };
-
 bus.addEventListener("drawing-changed", redraw);
 bus.addEventListener("cursor-changed", redraw);
 
 canvas.addEventListener("mousedown", (current) => {
-  //cursor.active = true;
-  currentLineCmd = new Lines(current.offsetX, current.offsetY);
+  currentLineCmd = new Lines(current.offsetX, current.offsetY, thickness);
   paths.push(currentLineCmd);
   const startIndex = 0;
   redos.splice(startIndex, redos.length);
-  //currentPath?.push([current.offsetX, current.offsetY]);
   notify(new Event("drawing-changed"));
 });
 
@@ -86,12 +88,26 @@ redobt.addEventListener("click", () => {
   }
 });
 
+thinbt.addEventListener("click", () => {
+  const thick = 1;
+  thickness = thick;
+  notify(new Event("drawing-changed"));
+});
+
+thickbt.addEventListener("click", () => {
+  const thick = 10;
+  thickness = thick;
+  notify(new Event("drawing-changed"));
+});
+
 header.innerHTML = gameName;
 app.append(header);
 app.append(canvas);
 app.append(clrbt);
 app.append(undobt);
 app.append(redobt);
+app.append(thinbt);
+app.append(thickbt);
 
 function notify(name: Event) {
   bus.dispatchEvent(name);
@@ -109,14 +125,17 @@ function redraw() {
 
 class Lines {
   points: [number, number][];
-  constructor(x: number, y: number) {
+  thickness: number;
+  constructor(x: number, y: number, thickness: number) {
     this.points = [[x, y]];
+    this.thickness = thickness;
   }
   execute() {
     const firstIndex = 0;
     const secondIndex = 1;
-    ctx!.strokeStyle = "Black";
     ctx?.beginPath();
+    ctx!.strokeStyle = "Black";
+    ctx!.lineWidth = this.thickness;
     const cur = this.points[firstIndex];
     ctx?.moveTo(cur[firstIndex], cur[secondIndex]);
     for (const curcor of this.points) {
@@ -138,7 +157,7 @@ class Cursors {
   }
   execute() {
     const fixerx = 8;
-    ctx!.font = "32px monospace";
+    ctx!.font = "100px monospace";
     ctx?.fillText(".", this.x - fixerx, this.y);
   }
 }
