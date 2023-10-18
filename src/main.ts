@@ -22,6 +22,7 @@ let insert: Lines | undefined;
 let currentLineCmd: Lines | null = null;
 let cursorCmd: Cursors | null = null;
 const defthick = 1;
+const modthick = 10;
 let thickness: number = defthick;
 
 canvas.style.cursor = "none";
@@ -36,7 +37,7 @@ canvas.width = 256;
 const ctx = canvas.getContext("2d");
 
 bus.addEventListener("drawing-changed", redraw);
-bus.addEventListener("cursor-changed", redraw);
+bus.addEventListener("tool-moved", redraw);
 
 canvas.addEventListener("mousedown", (current) => {
   currentLineCmd = new Lines(current.offsetX, current.offsetY, thickness);
@@ -48,7 +49,7 @@ canvas.addEventListener("mousedown", (current) => {
 
 canvas.addEventListener("mousemove", (current) => {
   cursorCmd = new Cursors(current.offsetX, current.offsetY);
-  notify(new Event("cursor-changed"));
+  notify(new Event("tool-moved"));
 
   const btrequire = 1;
   if (current.buttons == btrequire) {
@@ -89,13 +90,13 @@ redobt.addEventListener("click", () => {
 });
 
 thinbt.addEventListener("click", () => {
-  const thick = 1;
+  const thick = defthick;
   thickness = thick;
   notify(new Event("drawing-changed"));
 });
 
 thickbt.addEventListener("click", () => {
-  const thick = 10;
+  const thick = modthick;
   thickness = thick;
   notify(new Event("drawing-changed"));
 });
@@ -156,8 +157,15 @@ class Cursors {
     this.y = y;
   }
   execute() {
-    const fixerx = 8;
-    ctx!.font = "32px monospace";
-    ctx?.fillText(".", this.x - fixerx, this.y);
+    if (thickness == defthick) {
+      ctx!.font = "32px monospace";
+      const fixerx = 8;
+      ctx?.fillText(".", this.x - fixerx, this.y);
+    } else {
+      ctx!.font = "100px monospace";
+      const fixerx = 30;
+      const fixery = 8;
+      ctx?.fillText(".", this.x - fixerx, this.y + fixery);
+    }
   }
 }
