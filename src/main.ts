@@ -157,7 +157,7 @@ class Cursors {
   }
   execute() {
     const fixerx = 8;
-    ctx!.font = "100px monospace";
+    ctx!.font = "32px monospace";
     ctx?.fillText(".", this.x - fixerx, this.y);
   }
 }
