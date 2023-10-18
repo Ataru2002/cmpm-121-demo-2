@@ -89,7 +89,6 @@ clrbt.addEventListener("click", () => {
   const startPos = 0;
   currenticon = null;
   ctx?.clearRect(startPos, startPos, canvas.width, canvas.height);
-  currenticon = null;
   paths.splice(startPos, paths.length);
 });
 
@@ -117,28 +116,41 @@ redobt.addEventListener("click", () => {
 
 thinbt.addEventListener("click", () => {
   currenticon = null;
+  cursorCmd?.changeIcon(".");
   const thick = defthick;
   thickness = thick;
-  notify(new Event("drawing-changed"));
+
+  notify(new Event("tool-moved"));
 });
 
 thickbt.addEventListener("click", () => {
   currenticon = null;
+  cursorCmd?.changeIcon(".");
   const thick = modthick;
   thickness = thick;
-  notify(new Event("drawing-changed"));
+
+  notify(new Event("tool-moved"));
 });
 
 chocobt.addEventListener("click", () => {
   currenticon = choco;
+  cursorCmd?.changeIcon(currenticon);
+
+  notify(new Event("tool-moved"));
 });
 
 honeybt.addEventListener("click", () => {
   currenticon = honey;
+  cursorCmd?.changeIcon(currenticon);
+
+  notify(new Event("tool-moved"));
 });
 
 candybt.addEventListener("click", () => {
   currenticon = candy;
+  cursorCmd?.changeIcon(currenticon);
+
+  notify(new Event("tool-moved"));
 });
 
 header.innerHTML = gameName;
@@ -162,6 +174,8 @@ function notify(name: Event) {
 function redraw() {
   const starter = 0;
   ctx?.clearRect(starter, starter, canvas.width, canvas.height);
+
+  console.log(paths);
 
   paths.forEach((cmd) => cmd.execute());
   if (cursorCmd) {
@@ -204,6 +218,7 @@ class Stickers {
     this.type = type;
   }
   execute() {
+    ctx!.font = "32px monospace";
     ctx?.fillText(this.type, this.x, this.y);
   }
   drag(x: number, y: number) {
@@ -224,19 +239,25 @@ class Cursors {
     this.type = type;
   }
   execute() {
-    if (currenticon) {
-      ctx!.font = "32px monospace";
-      const fixerx = 8;
-      ctx?.fillText(this.type, this.x - fixerx, this.y);
-    } else if (thickness == defthick) {
+    if (this.type != ".") {
       ctx!.font = "32px monospace";
       const fixerx = 8;
       ctx?.fillText(this.type, this.x - fixerx, this.y);
     } else {
-      ctx!.font = "100px monospace";
-      const fixerx = 30;
-      const fixery = 8;
-      ctx?.fillText(this.type, this.x - fixerx, this.y + fixery);
+      if (thickness == defthick) {
+        ctx!.font = "32px monospace";
+        const fixerx = 8;
+        ctx?.fillText(this.type, this.x - fixerx, this.y);
+      } else {
+        ctx!.font = "100px monospace";
+        const fixerx = 30;
+        const fixery = 8;
+        ctx?.fillText(this.type, this.x - fixerx, this.y + fixery);
+      }
     }
+  }
+  changeIcon(type: string) {
+    if (this.type != ".") ctx!.font = "32px monospace";
+    this.type = type;
   }
 }
