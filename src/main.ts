@@ -21,9 +21,9 @@ let currentLineCmd: Lines | null = null;
 let cursorCmd: Cursors | null = null;
 let stickerCmd: Stickers | null = null;
 const defthick = 1;
-const modthick = 10;
+const modthick = 5;
 let thickness: number = defthick;
-let cmds: string[] = [
+const cmds: string[] = [
   "clear",
   "undo",
   "redo",
@@ -32,13 +32,15 @@ let cmds: string[] = [
   "custom stickers",
   "export",
 ];
-let icons: string[] = ["🍫", "🍯", "🍬"];
-let iconbts: HTMLButtonElement[] = [
+const icons: string[] = ["🍫", "🍯", "🍬", "🍩", "☕"];
+const iconbts: HTMLButtonElement[] = [
+  document.createElement("button"),
+  document.createElement("button"),
   document.createElement("button"),
   document.createElement("button"),
   document.createElement("button"),
 ];
-let cmdbts: HTMLButtonElement[] = [
+const cmdbts: HTMLButtonElement[] = [
   document.createElement("button"),
   document.createElement("button"),
   document.createElement("button"),
@@ -50,8 +52,8 @@ let cmdbts: HTMLButtonElement[] = [
 let currenticon: string | null = null;
 
 canvas.style.cursor = "none";
-let lengthi = 3;
-let lengthc = 7;
+let lengthi = 5;
+const lengthc = 7;
 for (let i = 0; i < lengthc; i++) {
   cmdbts[i].innerHTML = cmds[i];
 }
@@ -100,14 +102,16 @@ canvas.addEventListener("mouseup", () => {
   notify(new Event("drawing-changed"));
 });
 
-cmdbts[0].addEventListener("click", () => {
+const firstInd = 0;
+cmdbts[firstInd].addEventListener("click", () => {
   const startPos = 0;
   currenticon = null;
   ctx?.clearRect(startPos, startPos, canvas.width, canvas.height);
   paths.splice(startPos, paths.length);
 });
 
-cmdbts[1].addEventListener("click", () => {
+const secondInd = 1;
+cmdbts[secondInd].addEventListener("click", () => {
   currenticon = null;
   if (paths.length) {
     insert = paths.pop();
@@ -118,7 +122,8 @@ cmdbts[1].addEventListener("click", () => {
   }
 });
 
-cmdbts[2].addEventListener("click", () => {
+const thirdInd = 2;
+cmdbts[thirdInd].addEventListener("click", () => {
   currenticon = null;
   if (redos.length) {
     insert = redos.pop();
@@ -129,7 +134,8 @@ cmdbts[2].addEventListener("click", () => {
   }
 });
 
-cmdbts[3].addEventListener("click", () => {
+const fourthInd = 3;
+cmdbts[fourthInd].addEventListener("click", () => {
   currenticon = null;
   cursorCmd?.changeIcon(".", ctx!);
   const thick = defthick;
@@ -138,7 +144,8 @@ cmdbts[3].addEventListener("click", () => {
   notify(new Event("tool-moved"));
 });
 
-cmdbts[4].addEventListener("click", () => {
+const fifthInd = 4;
+cmdbts[fifthInd].addEventListener("click", () => {
   currenticon = null;
   cursorCmd?.changeIcon(".", ctx!);
   const thick = modthick;
@@ -147,8 +154,10 @@ cmdbts[4].addEventListener("click", () => {
   notify(new Event("tool-moved"));
 });
 
-cmdbts[5].addEventListener("click", () => {
-  currenticon = prompt("Add your custom sticker");
+const sixthInd = 5;
+cmdbts[sixthInd].addEventListener("click", () => {
+  const input = prompt("Add your custom sticker");
+  currenticon = input;
   if (currenticon) {
     const newbt = document.createElement("button");
     cursorCmd?.changeIcon(currenticon, ctx!);
@@ -158,8 +167,8 @@ cmdbts[5].addEventListener("click", () => {
     lengthi++;
 
     newbt.addEventListener("click", () => {
-      currenticon = icons[lengthi - 1];
-      cursorCmd?.changeIcon(currenticon, ctx!);
+      currenticon = input;
+      cursorCmd?.changeIcon(currenticon!, ctx!);
 
       notify(new Event("tool-moved"));
     });
@@ -169,16 +178,19 @@ cmdbts[5].addEventListener("click", () => {
   notify(new Event("tool-moved"));
 });
 
-cmdbts[6].addEventListener("click", () => {
+const seventhInd = 6;
+cmdbts[seventhInd].addEventListener("click", () => {
   const tempCanvas = document.createElement("canvas");
   tempCanvas.id = "canvas";
-  tempCanvas.height = 1024;
-  tempCanvas.width = 1024;
+  const dims = 1024;
+  tempCanvas.height = dims;
+  tempCanvas.width = dims;
   const ctx2 = tempCanvas.getContext("2d");
 
   const starter = 0;
   ctx2?.clearRect(starter, starter, tempCanvas.width, tempCanvas.height);
-  ctx2?.scale(4, 4);
+  const scaler = 4;
+  ctx2?.scale(scaler, scaler);
   paths.forEach((cmd) => cmd.execute(ctx2!));
 
   const anchor = document.createElement("a");
@@ -238,17 +250,14 @@ class Lines {
     const firstIndex = 0;
     const secondIndex = 1;
     context?.beginPath();
-    context!.strokeStyle = "Black";
-    context!.lineWidth = this.thickness;
+    context.strokeStyle = "Black";
+    context.lineWidth = this.thickness;
     const cur = this.points[firstIndex];
     context?.moveTo(cur[firstIndex], cur[secondIndex]);
     for (const curcor of this.points) {
       context?.lineTo(curcor[firstIndex], curcor[secondIndex]);
     }
     context?.stroke();
-  }
-  drag(x: number, y: number) {
-    this.points.push([x, y]);
   }
 }
 
@@ -262,14 +271,8 @@ class Stickers {
     this.type = type;
   }
   execute(context: CanvasRenderingContext2D) {
-    context!.font = "32px monospace";
+    context.font = "32px monospace";
     context?.fillText(this.type, this.x, this.y);
-  }
-  drag(x: number, y: number, context: CanvasRenderingContext2D) {
-    context?.translate(x, y);
-  }
-  reset(context: CanvasRenderingContext2D) {
-    context?.resetTransform();
   }
 }
 
@@ -284,16 +287,15 @@ class Cursors {
   }
   execute(context: CanvasRenderingContext2D) {
     if (this.type != ".") {
-      context!.font = "32px monospace";
-      const fixerx = 0;
-      context?.fillText(this.type, this.x - fixerx, this.y);
+      context.font = "32px monospace";
+      context?.fillText(this.type, this.x, this.y);
     } else {
       if (thickness == defthick) {
-        context!.font = "32px monospace";
+        context.font = "32px monospace";
         const fixerx = 8;
         context?.fillText(this.type, this.x - fixerx, this.y);
       } else {
-        context!.font = "100px monospace";
+        context.font = "100px monospace";
         const fixerx = 30;
         const fixery = 8;
         context?.fillText(this.type, this.x - fixerx, this.y + fixery);
@@ -301,7 +303,7 @@ class Cursors {
     }
   }
   changeIcon(type: string, context: CanvasRenderingContext2D) {
-    if (this.type != ".") context!.font = "32px monospace";
+    if (this.type != ".") context.font = "32px monospace";
     this.type = type;
   }
 }
