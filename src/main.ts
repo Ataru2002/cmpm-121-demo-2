@@ -2,21 +2,15 @@ import "./style.css";
 
 const app: HTMLDivElement = document.querySelector("#app")!;
 
-const gameName = "Nhan's game";
+const gameName = "Nhan's paint";
 
 document.title = gameName;
 
 const header = document.createElement("h1");
 const br = document.createElement("br");
+const br2 = document.createElement("br");
+const br3 = document.createElement("br");
 const canvas = document.createElement("canvas");
-const clrbt = document.createElement("button");
-const undobt = document.createElement("button");
-const redobt = document.createElement("button");
-const thinbt = document.createElement("button");
-const thickbt = document.createElement("button");
-const chocobt = document.createElement("button");
-const honeybt = document.createElement("button");
-const candybt = document.createElement("button");
 
 const bus = new EventTarget();
 //let currentPath: [number, number][] | null = null;
@@ -29,20 +23,41 @@ let stickerCmd: Stickers | null = null;
 const defthick = 1;
 const modthick = 10;
 let thickness: number = defthick;
-const choco = "🍫";
-const honey = "🍯";
-const candy = "🍬";
+let cmds: string[] = [
+  "clear",
+  "undo",
+  "redo",
+  "thin",
+  "thick",
+  "custom stickers",
+  "export",
+];
+let icons: string[] = ["🍫", "🍯", "🍬"];
+let iconbts: HTMLButtonElement[] = [
+  document.createElement("button"),
+  document.createElement("button"),
+  document.createElement("button"),
+];
+let cmdbts: HTMLButtonElement[] = [
+  document.createElement("button"),
+  document.createElement("button"),
+  document.createElement("button"),
+  document.createElement("button"),
+  document.createElement("button"),
+  document.createElement("button"),
+  document.createElement("button"),
+];
 let currenticon: string | null = null;
 
 canvas.style.cursor = "none";
-clrbt.innerHTML = "clear";
-undobt.innerHTML = "undo";
-redobt.innerHTML = "redo";
-thinbt.innerHTML = "thin";
-thickbt.innerHTML = "thick";
-chocobt.innerHTML = choco;
-honeybt.innerHTML = honey;
-candybt.innerHTML = candy;
+let lengthi = 3;
+let lengthc = 7;
+for (let i = 0; i < lengthc; i++) {
+  cmdbts[i].innerHTML = cmds[i];
+}
+for (let i = 0; i < lengthi; i++) {
+  iconbts[i].innerHTML = icons[i];
+}
 
 canvas.id = "canvas";
 canvas.height = 256;
@@ -85,14 +100,14 @@ canvas.addEventListener("mouseup", () => {
   notify(new Event("drawing-changed"));
 });
 
-clrbt.addEventListener("click", () => {
+cmdbts[0].addEventListener("click", () => {
   const startPos = 0;
   currenticon = null;
   ctx?.clearRect(startPos, startPos, canvas.width, canvas.height);
   paths.splice(startPos, paths.length);
 });
 
-undobt.addEventListener("click", () => {
+cmdbts[1].addEventListener("click", () => {
   currenticon = null;
   if (paths.length) {
     insert = paths.pop();
@@ -103,7 +118,7 @@ undobt.addEventListener("click", () => {
   }
 });
 
-redobt.addEventListener("click", () => {
+cmdbts[2].addEventListener("click", () => {
   currenticon = null;
   if (redos.length) {
     insert = redos.pop();
@@ -114,58 +129,89 @@ redobt.addEventListener("click", () => {
   }
 });
 
-thinbt.addEventListener("click", () => {
+cmdbts[3].addEventListener("click", () => {
   currenticon = null;
-  cursorCmd?.changeIcon(".");
+  cursorCmd?.changeIcon(".", ctx!);
   const thick = defthick;
   thickness = thick;
 
   notify(new Event("tool-moved"));
 });
 
-thickbt.addEventListener("click", () => {
+cmdbts[4].addEventListener("click", () => {
   currenticon = null;
-  cursorCmd?.changeIcon(".");
+  cursorCmd?.changeIcon(".", ctx!);
   const thick = modthick;
   thickness = thick;
 
   notify(new Event("tool-moved"));
 });
 
-chocobt.addEventListener("click", () => {
-  currenticon = choco;
-  cursorCmd?.changeIcon(currenticon);
+cmdbts[5].addEventListener("click", () => {
+  currenticon = prompt("Add your custom sticker");
+  if (currenticon) {
+    const newbt = document.createElement("button");
+    cursorCmd?.changeIcon(currenticon, ctx!);
+    icons.push(currenticon);
+    iconbts.push(newbt);
+    newbt.innerHTML = currenticon;
+    lengthi++;
 
+    newbt.addEventListener("click", () => {
+      currenticon = icons[lengthi - 1];
+      cursorCmd?.changeIcon(currenticon, ctx!);
+
+      notify(new Event("tool-moved"));
+    });
+
+    app.append(newbt);
+  }
   notify(new Event("tool-moved"));
 });
 
-honeybt.addEventListener("click", () => {
-  currenticon = honey;
-  cursorCmd?.changeIcon(currenticon);
+cmdbts[6].addEventListener("click", () => {
+  const tempCanvas = document.createElement("canvas");
+  tempCanvas.id = "canvas";
+  tempCanvas.height = 1024;
+  tempCanvas.width = 1024;
+  const ctx2 = tempCanvas.getContext("2d");
 
-  notify(new Event("tool-moved"));
+  const starter = 0;
+  ctx2?.clearRect(starter, starter, tempCanvas.width, tempCanvas.height);
+  ctx2?.scale(4, 4);
+  paths.forEach((cmd) => cmd.execute(ctx2!));
+
+  const anchor = document.createElement("a");
+  anchor.href = tempCanvas.toDataURL("image/png");
+  anchor.download = "sketchpad.png";
+  anchor.click();
 });
 
-candybt.addEventListener("click", () => {
-  currenticon = candy;
-  cursorCmd?.changeIcon(currenticon);
+for (let i = 0; i < lengthi; i++) {
+  iconbts[i].addEventListener("click", () => {
+    currenticon = icons[i];
+    cursorCmd?.changeIcon(currenticon, ctx!);
 
-  notify(new Event("tool-moved"));
-});
+    notify(new Event("tool-moved"));
+  });
+}
 
 header.innerHTML = gameName;
 app.append(header);
 app.append(canvas);
 app.append(br);
-app.append(clrbt);
-app.append(undobt);
-app.append(redobt);
-app.append(thinbt);
-app.append(thickbt);
-//app.append(br);
-app.append(chocobt);
-app.append(honeybt);
-app.append(candybt);
+const firsts = 5;
+for (let i = 0; i < firsts; i++) {
+  app.append(cmdbts[i]);
+}
+app.append(br2);
+for (let i = 5; i < lengthc; i++) {
+  app.append(cmdbts[i]);
+}
+app.append(br3);
+for (let i = 0; i < lengthi; i++) {
+  app.append(iconbts[i]);
+}
 
 function notify(name: Event) {
   bus.dispatchEvent(name);
@@ -175,11 +221,9 @@ function redraw() {
   const starter = 0;
   ctx?.clearRect(starter, starter, canvas.width, canvas.height);
 
-  console.log(paths);
-
-  paths.forEach((cmd) => cmd.execute());
+  paths.forEach((cmd) => cmd.execute(ctx!));
   if (cursorCmd) {
-    cursorCmd.execute();
+    cursorCmd.execute(ctx!);
   }
 }
 
@@ -190,18 +234,18 @@ class Lines {
     this.points = [[x, y]];
     this.thickness = thickness;
   }
-  execute() {
+  execute(context: CanvasRenderingContext2D) {
     const firstIndex = 0;
     const secondIndex = 1;
-    ctx?.beginPath();
-    ctx!.strokeStyle = "Black";
-    ctx!.lineWidth = this.thickness;
+    context?.beginPath();
+    context!.strokeStyle = "Black";
+    context!.lineWidth = this.thickness;
     const cur = this.points[firstIndex];
-    ctx?.moveTo(cur[firstIndex], cur[secondIndex]);
+    context?.moveTo(cur[firstIndex], cur[secondIndex]);
     for (const curcor of this.points) {
-      ctx?.lineTo(curcor[firstIndex], curcor[secondIndex]);
+      context?.lineTo(curcor[firstIndex], curcor[secondIndex]);
     }
-    ctx?.stroke();
+    context?.stroke();
   }
   drag(x: number, y: number) {
     this.points.push([x, y]);
@@ -217,15 +261,15 @@ class Stickers {
     this.y = y;
     this.type = type;
   }
-  execute() {
-    ctx!.font = "32px monospace";
-    ctx?.fillText(this.type, this.x, this.y);
+  execute(context: CanvasRenderingContext2D) {
+    context!.font = "32px monospace";
+    context?.fillText(this.type, this.x, this.y);
   }
-  drag(x: number, y: number) {
-    ctx?.translate(x, y);
+  drag(x: number, y: number, context: CanvasRenderingContext2D) {
+    context?.translate(x, y);
   }
-  reset() {
-    ctx?.resetTransform();
+  reset(context: CanvasRenderingContext2D) {
+    context?.resetTransform();
   }
 }
 
@@ -238,26 +282,26 @@ class Cursors {
     this.y = y;
     this.type = type;
   }
-  execute() {
+  execute(context: CanvasRenderingContext2D) {
     if (this.type != ".") {
-      ctx!.font = "32px monospace";
-      const fixerx = 8;
-      ctx?.fillText(this.type, this.x - fixerx, this.y);
+      context!.font = "32px monospace";
+      const fixerx = 0;
+      context?.fillText(this.type, this.x - fixerx, this.y);
     } else {
       if (thickness == defthick) {
-        ctx!.font = "32px monospace";
+        context!.font = "32px monospace";
         const fixerx = 8;
-        ctx?.fillText(this.type, this.x - fixerx, this.y);
+        context?.fillText(this.type, this.x - fixerx, this.y);
       } else {
-        ctx!.font = "100px monospace";
+        context!.font = "100px monospace";
         const fixerx = 30;
         const fixery = 8;
-        ctx?.fillText(this.type, this.x - fixerx, this.y + fixery);
+        context?.fillText(this.type, this.x - fixerx, this.y + fixery);
       }
     }
   }
-  changeIcon(type: string) {
-    if (this.type != ".") ctx!.font = "32px monospace";
+  changeIcon(type: string, context: CanvasRenderingContext2D) {
+    if (this.type != ".") context!.font = "32px monospace";
     this.type = type;
   }
 }
