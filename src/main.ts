@@ -295,9 +295,9 @@ class Cursors {
         const fixerx = 8;
         context?.fillText(this.type, this.x - fixerx, this.y);
       } else {
-        context.font = "100px monospace";
-        const fixerx = 30;
-        const fixery = 8;
+        context.font = "75px monospace";
+        const fixerx = 20;
+        const fixery = 4;
         context?.fillText(this.type, this.x - fixerx, this.y + fixery);
       }
     }
