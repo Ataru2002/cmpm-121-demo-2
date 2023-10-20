@@ -13,10 +13,12 @@ const br3 = document.createElement("br");
 const canvas = document.createElement("canvas");
 
 const bus = new EventTarget();
-//let currentPath: [number, number][] | null = null;
 const paths: (Lines | Stickers)[] = [];
 const redos: (Lines | Stickers)[] = [];
 let insert: Lines | Stickers | undefined;
+let currentColor: string | null = null;
+const starter = 0;
+let currentInd: number = starter;
 let currentLineCmd: Lines | null = null;
 let cursorCmd: Cursors | null = null;
 let stickerCmd: Stickers | null = null;
@@ -31,8 +33,10 @@ const cmds: string[] = [
   "thick",
   "custom stickers",
   "export",
+  "color",
 ];
 const icons: string[] = ["🍫", "🍯", "🍬", "🍩", "☕"];
+const colors: string[] = ["Black", "Red", "Green", "Blue"];
 const iconbts: HTMLButtonElement[] = [
   document.createElement("button"),
   document.createElement("button"),
@@ -48,18 +52,28 @@ const cmdbts: HTMLButtonElement[] = [
   document.createElement("button"),
   document.createElement("button"),
   document.createElement("button"),
+  document.createElement("button"),
 ];
 let currenticon: string | null = null;
 
 canvas.style.cursor = "none";
-let lengthi = 5;
-const lengthc = 7;
-for (let i = 0; i < lengthc; i++) {
+for (let i = 0; i < cmdbts.length; i++) {
   cmdbts[i].innerHTML = cmds[i];
 }
-for (let i = 0; i < lengthi; i++) {
+for (let i = 0; i < iconbts.length; i++) {
   iconbts[i].innerHTML = icons[i];
 }
+const firstInd = 0;
+const secondInd = 1;
+const thirdInd = 2;
+const fourthInd = 3;
+const fifthInd = 4;
+const sixthInd = 5;
+const seventhInd = 6;
+const eighthInd = 7;
+currentColor = colors[currentInd];
+cmdbts[eighthInd].style.backgroundColor = colors[currentInd];
+cmdbts[eighthInd].style.color = "White";
 
 canvas.id = "canvas";
 canvas.height = 256;
@@ -74,7 +88,12 @@ canvas.addEventListener("mousedown", (current) => {
     stickerCmd = new Stickers(current.offsetX, current.offsetY, currenticon);
     paths.push(stickerCmd);
   } else {
-    currentLineCmd = new Lines(current.offsetX, current.offsetY, thickness);
+    currentLineCmd = new Lines(
+      current.offsetX,
+      current.offsetY,
+      thickness,
+      currentColor!
+    );
     paths.push(currentLineCmd);
   }
   const startIndex = 0;
@@ -102,7 +121,6 @@ canvas.addEventListener("mouseup", () => {
   notify(new Event("drawing-changed"));
 });
 
-const firstInd = 0;
 cmdbts[firstInd].addEventListener("click", () => {
   const startPos = 0;
   currenticon = null;
@@ -110,7 +128,6 @@ cmdbts[firstInd].addEventListener("click", () => {
   paths.splice(startPos, paths.length);
 });
 
-const secondInd = 1;
 cmdbts[secondInd].addEventListener("click", () => {
   currenticon = null;
   if (paths.length) {
@@ -122,7 +139,6 @@ cmdbts[secondInd].addEventListener("click", () => {
   }
 });
 
-const thirdInd = 2;
 cmdbts[thirdInd].addEventListener("click", () => {
   currenticon = null;
   if (redos.length) {
@@ -134,7 +150,6 @@ cmdbts[thirdInd].addEventListener("click", () => {
   }
 });
 
-const fourthInd = 3;
 cmdbts[fourthInd].addEventListener("click", () => {
   currenticon = null;
   cursorCmd?.changeIcon(".", ctx!);
@@ -144,7 +159,6 @@ cmdbts[fourthInd].addEventListener("click", () => {
   notify(new Event("tool-moved"));
 });
 
-const fifthInd = 4;
 cmdbts[fifthInd].addEventListener("click", () => {
   currenticon = null;
   cursorCmd?.changeIcon(".", ctx!);
@@ -154,7 +168,6 @@ cmdbts[fifthInd].addEventListener("click", () => {
   notify(new Event("tool-moved"));
 });
 
-const sixthInd = 5;
 cmdbts[sixthInd].addEventListener("click", () => {
   const input = prompt("Add your custom sticker");
   currenticon = input;
@@ -164,7 +177,6 @@ cmdbts[sixthInd].addEventListener("click", () => {
     icons.push(currenticon);
     iconbts.push(newbt);
     newbt.innerHTML = currenticon;
-    lengthi++;
 
     newbt.addEventListener("click", () => {
       currenticon = input;
@@ -178,7 +190,6 @@ cmdbts[sixthInd].addEventListener("click", () => {
   notify(new Event("tool-moved"));
 });
 
-const seventhInd = 6;
 cmdbts[seventhInd].addEventListener("click", () => {
   const tempCanvas = document.createElement("canvas");
   tempCanvas.id = "canvas";
@@ -199,7 +210,15 @@ cmdbts[seventhInd].addEventListener("click", () => {
   anchor.click();
 });
 
-for (let i = 0; i < lengthi; i++) {
+cmdbts[eighthInd].addEventListener("click", () => {
+  const incrementer = 1;
+  currentInd = (currentInd + incrementer) % colors.length;
+  currentColor = colors[currentInd];
+  cmdbts[eighthInd].style.backgroundColor = currentColor;
+  notify(new Event("drawing-changed"));
+});
+
+for (let i = 0; i < iconbts.length; i++) {
   iconbts[i].addEventListener("click", () => {
     currenticon = icons[i];
     cursorCmd?.changeIcon(currenticon, ctx!);
@@ -217,11 +236,11 @@ for (let i = 0; i < firsts; i++) {
   app.append(cmdbts[i]);
 }
 app.append(br2);
-for (let i = 5; i < lengthc; i++) {
+for (let i = 5; i < cmdbts.length; i++) {
   app.append(cmdbts[i]);
 }
 app.append(br3);
-for (let i = 0; i < lengthi; i++) {
+for (let i = 0; i < iconbts.length; i++) {
   app.append(iconbts[i]);
 }
 
@@ -242,15 +261,17 @@ function redraw() {
 class Lines {
   points: [number, number][];
   thickness: number;
-  constructor(x: number, y: number, thickness: number) {
+  color: string;
+  constructor(x: number, y: number, thickness: number, color: string) {
     this.points = [[x, y]];
     this.thickness = thickness;
+    this.color = color;
   }
   execute(context: CanvasRenderingContext2D) {
     const firstIndex = 0;
     const secondIndex = 1;
     context?.beginPath();
-    context.strokeStyle = "Black";
+    context.strokeStyle = this.color;
     context.lineWidth = this.thickness;
     const cur = this.points[firstIndex];
     context?.moveTo(cur[firstIndex], cur[secondIndex]);
